@@ -12,10 +12,20 @@
  * Recibe un paquete a serializar, y un puntero a un int en el que dejar
  * el tamaño del stream de bytes serializados que devuelve
  */
-//void* serializar_paquete(t_paquete* paquete, int *bytes)
-//{
+void* serializar_paquete(t_paquete* paquete, int bytes)
+ {
 
-//}
+	void* stream = malloc(bytes);
+	int offset = 0;
+
+	memcpy(stream, &(paquete -> codigo_operacion), sizeof(paquete -> codigo_operacion));
+	offset += sizeof(paquete -> codigo_operacion);
+	memcpy(stream + offset, &(paquete -> buffer -> size), sizeof(paquete -> buffer -> size));
+	offset += sizeof(paquete -> buffer -> size);
+	memcpy(stream + offset, paquete -> buffer -> stream, paquete -> buffer -> size);
+
+	return stream;
+}
 
 int crear_conexion(char *ip, char* puerto)
 {
@@ -42,7 +52,14 @@ int crear_conexion(char *ip, char* puerto)
 //TODO
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
-	send(socket_cliente, mensaje, sizeof(mensaje), 0); //para tener el cuenta el centinela
+	t_paquete paquete;
+	paquete -> codigo_operacion = 1;
+	paquete -> buffer -> stream = mensaje;
+	paquete -> buffer -> size = strlen(*mensaje) + 1;
+
+	void* stream = serializar_paquete(paquete, paquete -> buffer -> size);
+
+	send(socket_cliente, *stream, paquete -> buffer -> size, 0); //para tener el cuenta el centinela
 }
 //TODO
 char* recibir_mensaje(int socket_cliente)
