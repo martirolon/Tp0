@@ -37,7 +37,7 @@ int main(void)
 	printf("enviar mensaje");
 
 	//enviar mensaje
-	char* mnsj = "holaaa";
+	char* mnsj = "holaa";
 
 	enviar_mensaje(mnsj, conexion);
 

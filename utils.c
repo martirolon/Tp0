@@ -25,6 +25,8 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	offset += sizeof(paquete -> codigo_operacion);
 	memcpy(stream + offset, &(paquete -> buffer -> size), sizeof(paquete -> buffer -> size));
 	offset += sizeof(paquete -> buffer -> size);
+
+	// ACA VA A HABER UN SWITCH SEGUN CODIGO DE PAQUETE QUE HANDLEE LO Q VENGA.
 	memcpy(stream + offset, paquete -> buffer -> stream, paquete -> buffer -> size);
 
 	printf("\n despues de copiar \n");
@@ -67,9 +69,15 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 
 	void* stream = serializar_paquete(paquete, paquete -> buffer -> size);
 
-	printf("\n paquete serializado:  \n");
+	printf("\n paquete serializado:\n");
+	printf("codigo operacion: %d \n", *((int *) (stream)));
+	printf("size: %d \n", *((int *) (stream + sizeof(int))));
+	printf("palabra: %s \n", (char *) (stream + sizeof(int)*2));
 
-	send(socket_cliente, stream, paquete -> buffer -> size, 0);
+	printf("size de lo apuntado por stream: %d", sizeof(*stream));
+
+	//int pesoTotal = sizeof(int)*2 + *((int *) (stream + sizeof(int))); //(esta variable refleja el peso del size + cod_op + stream)
+	send(socket_cliente, stream + sizeof(int)*2, *((int *) (stream + sizeof(int))), 0);
 
 	free(paquete);
 }
