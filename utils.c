@@ -14,9 +14,12 @@
  */
 void* serializar_paquete(t_paquete* paquete, int bytes)
  {
-
-	void* stream = malloc(bytes);
+	printf("\n antes del malloc \n");
+	void* stream = malloc(bytes + sizeof(paquete -> codigo_operacion) + sizeof(paquete -> buffer -> size));
+	printf("despues del malloc \n");
 	int offset = 0;
+
+	printf("\n antes de copiar \n");
 
 	memcpy(stream, &(paquete -> codigo_operacion), sizeof(paquete -> codigo_operacion));
 	offset += sizeof(paquete -> codigo_operacion);
@@ -24,6 +27,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	offset += sizeof(paquete -> buffer -> size);
 	memcpy(stream + offset, paquete -> buffer -> stream, paquete -> buffer -> size);
 
+	printf("\n despues de copiar \n");
 	return stream;
 }
 
@@ -51,15 +55,23 @@ int crear_conexion(char *ip, char* puerto)
 
 //TODO
 void enviar_mensaje(char* mensaje, int socket_cliente)
-{
-	t_paquete paquete;
+{	printf("\n estoy aca \n");
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	printf("\n no \n");
 	paquete -> codigo_operacion = 1;
 	paquete -> buffer -> stream = mensaje;
-	paquete -> buffer -> size = strlen(*mensaje) + 1;
+	paquete -> buffer -> size = strlen(mensaje) + 1; //para tener el cuenta el centinela
+	printf("\n antes del void \n");
+
+	printf("%d",paquete -> buffer -> size);
 
 	void* stream = serializar_paquete(paquete, paquete -> buffer -> size);
 
-	send(socket_cliente, *stream, paquete -> buffer -> size, 0); //para tener el cuenta el centinela
+	printf("\n paquete serializado:  \n");
+
+	send(socket_cliente, stream, paquete -> buffer -> size, 0);
+
+	free(paquete);
 }
 //TODO
 char* recibir_mensaje(int socket_cliente)
@@ -82,3 +94,4 @@ void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
 }
+// \n

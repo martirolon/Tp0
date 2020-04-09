@@ -11,8 +11,8 @@ int main(void)
 {
 	/*---------------------------------------------------PARTE 2-------------------------------------------------------------*/
 	int conexion;
-	char* ip;
-	char* puerto;
+	char* ip = "127.0.0.1";
+	char* puerto = "4444";
 
 	t_log* logger;
 	t_config* config;
@@ -30,11 +30,18 @@ int main(void)
 
 	//antes de continuar, tenemos que asegurarnos que el servidor esté corriendo porque lo necesitaremos para lo que sigue.
 
+	printf("crear conexion");
 	//crear conexion
-	conexion = crear_conexion(config_get_string_value(config, "IP"), config_get_string_value(config, "PUERTO"));
+	conexion = crear_conexion(ip, puerto);
+
+	printf("enviar mensaje");
 
 	//enviar mensaje
-	enviar_mensaje("hola", conexion);
+	char* mnsj = "holaaa";
+
+	enviar_mensaje(mnsj, conexion);
+
+	printf("mensaje enviado");
 
 	//recibir mensaje
 	char* mensaje_recibido = recibir_mensaje(conexion);
@@ -43,6 +50,9 @@ int main(void)
 	log_info(logger, mensaje_recibido);
 
 	terminar_programa(conexion, logger, config);
+
+	return 0;
+
 }
 
 //TODO
