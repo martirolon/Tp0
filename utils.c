@@ -14,23 +14,18 @@
  */
 void* serializar_paquete(t_paquete* paquete, int bytes)
  {
-	printf("\n antes del malloc \n");
-	void* stream = malloc(bytes + sizeof(paquete -> codigo_operacion) + sizeof(paquete -> buffer -> size));
-	printf("despues del malloc \n");
+// cod_op|stream_size|stream
+	int malloc_size = bytes + sizeof(op_code) + sizeof(int);
+	void* _stream = malloc(malloc_size+1);
 	int offset = 0;
 
-	printf("\n antes de copiar \n");
-
-	memcpy(stream, &(paquete -> codigo_operacion), sizeof(paquete -> codigo_operacion));
+	memcpy(_stream+offset, &(paquete -> codigo_operacion), sizeof(paquete -> codigo_operacion));
 	offset += sizeof(paquete -> codigo_operacion);
-	memcpy(stream + offset, &(paquete -> buffer -> size), sizeof(paquete -> buffer -> size));
+	memcpy(_stream + offset, &(paquete -> buffer -> size), sizeof(paquete -> buffer -> size));
 	offset += sizeof(paquete -> buffer -> size);
-
-	// ACA VA A HABER UN SWITCH SEGUN CODIGO DE PAQUETE QUE HANDLEE LO Q VENGA.
-	memcpy(stream + offset, paquete -> buffer -> stream, paquete -> buffer -> size);
-
-	printf("\n despues de copiar \n");
-	return stream;
+	memcpy(_stream + offset, paquete -> buffer -> stream, paquete -> buffer -> size);
+	offset += paquete -> buffer -> size;
+	return _stream;
 }
 
 int crear_conexion(char *ip, char* puerto)
@@ -57,29 +52,27 @@ int crear_conexion(char *ip, char* puerto)
 
 //TODO
 void enviar_mensaje(char* mensaje, int socket_cliente)
-{	printf("\n estoy aca \n");
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	printf("\n no \n");
-	paquete -> codigo_operacion = 1;
-	paquete -> buffer -> stream = mensaje;
-	paquete -> buffer -> size = strlen(mensaje) + 1; //para tener el cuenta el centinela
-	printf("\n antes del void \n");
+{
+	t_buffer* buffer = malloc(sizeof(t_buffer));
 
-	printf("%d",paquete -> buffer -> size);
+	buffer -> size = strlen(mensaje) + 1; //para tener el cuenta el centinela
+	buffer->stream = malloc(buffer -> size);
+	memcpy(buffer->stream,mensaje,buffer->size);
+
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete -> codigo_operacion = MENSAJE;
+	paquete->buffer = buffer;
 
 	void* stream = serializar_paquete(paquete, paquete -> buffer -> size);
 
-	printf("\n paquete serializado:\n");
-	printf("codigo operacion: %d \n", *((int *) (stream)));
-	printf("size: %d \n", *((int *) (stream + sizeof(int))));
-	printf("palabra: %s \n", (char *) (stream + sizeof(int)*2));
+	int header = sizeof(paquete -> codigo_operacion) + paquete -> buffer -> size + sizeof(paquete -> buffer -> size);
 
-	printf("size de lo apuntado por stream: %d", sizeof(*stream));
+	send(socket_cliente, stream, header, 0);
 
-	//int pesoTotal = sizeof(int)*2 + *((int *) (stream + sizeof(int))); //(esta variable refleja el peso del size + cod_op + stream)
-	send(socket_cliente, stream + sizeof(int)*2, *((int *) (stream + sizeof(int))), 0);
-
+	free(buffer->stream);
+	free(buffer);
 	free(paquete);
+	free(stream);
 }
 //TODO
 char* recibir_mensaje(int socket_cliente)
@@ -87,9 +80,7 @@ char* recibir_mensaje(int socket_cliente)
 	int bytes_recibidos;
 	char* buffer = malloc(10);
 
-	bytes_recibidos = recv(socket_cliente, buffer, 9 , 0); //para tener en cuenta el centinela
-
-	// aca habria que chequear que no de 0 porq sino significa que el server corto conexion
+	bytes_recibidos = recv(socket_cliente, buffer, 9 , 0);
 
 	buffer[bytes_recibidos] = '\0';
 
@@ -102,4 +93,3 @@ void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
 }
-// \n
